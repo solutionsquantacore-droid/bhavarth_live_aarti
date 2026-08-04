@@ -5,17 +5,15 @@ import os
 
 JSON_PATH = "live_aarti.json"
 
-def get_live_video_id(search_query):
+def get_live_video_id_from_search(search_query):
     try:
         url = f"https://www.youtube.com/results?search_query={search_query}&sp=EgJAAQ%253D%253D"
-        # Using a more robust User-Agent to avoid 403 Forbidden errors
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'Accept-Language': 'en-US,en;q=0.9',
         }
         req = urllib.request.Request(url, headers=headers)
         html = urllib.request.urlopen(req).read().decode('utf-8')
-        # Find the first video ID in the search results
         match = re.search(r'\"videoId\":\"([a-zA-Z0-9_-]{11})\"', html)
         if match:
             return match.group(1)
@@ -23,15 +21,37 @@ def get_live_video_id(search_query):
         print(f"Error fetching for {search_query}: {e}")
     return None
 
+def get_live_video_id_from_channel(channel_handle):
+    try:
+        url = f"https://www.youtube.com/{channel_handle}/live"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+        }
+        req = urllib.request.Request(url, headers=headers)
+        html = urllib.request.urlopen(req).read().decode('utf-8')
+        
+        # Look for canonical link which contains the actual watch URL
+        match = re.search(r'<link rel="canonical" href="https://www.youtube.com/watch\?v=([a-zA-Z0-9_-]{11})">', html)
+        if match:
+            return match.group(1)
+            
+        # Fallback to search videoId in json state
+        match = re.search(r'\"videoId\":\"([a-zA-Z0-9_-]{11})\"', html)
+        if match:
+            return match.group(1)
+    except Exception as e:
+        print(f"Error fetching channel live for {channel_handle}: {e}")
+    return None
+
 QUERIES = {
-    # Updated query to specifically target the MH ONE SHRADDHA channel live stream
-    "1": "vaishno+devi+live+darshan+mh+one+shraddha",
-    "2": "mahakaleshwar+live+darshan",
-    "3": "banke+bihari+live+darshan"
+    # We will now use the channel handle instead of a search query
+    "1": {"handle": "@MHONESHRADDHA", "type": "channel"},
+    "2": {"query": "mahakaleshwar+live+darshan", "type": "search"},
+    "3": {"query": "banke+bihari+live+darshan", "type": "search"}
 }
 
 def main():
-    # Make sure we're running from the project root
     if not os.path.exists(JSON_PATH):
         print(f"File not found: {JSON_PATH}")
         print("Please run this script from the root of the Android project.")
@@ -42,9 +62,14 @@ def main():
 
     updated = False
     for item in data:
-        q = QUERIES.get(item['id'])
-        if q:
-            vid = get_live_video_id(q)
+        q_info = QUERIES.get(item['id'])
+        if q_info:
+            vid = None
+            if q_info['type'] == "channel":
+                vid = get_live_video_id_from_channel(q_info['handle'])
+            else:
+                vid = get_live_video_id_from_search(q_info['query'])
+                
             if vid:
                 new_url = f"https://www.youtube.com/watch?v={vid}"
                 new_thumbnail = f"https://img.youtube.com/vi/{vid}/hqdefault.jpg"
@@ -56,6 +81,8 @@ def main():
                     updated = True
                 else:
                     print(f"{item['temple_name_en']} is already up to date ({vid})")
+            else:
+                print(f"Could not find live video for {item['temple_name_en']}")
 
     if updated:
         with open(JSON_PATH, 'w', encoding='utf-8') as f:
