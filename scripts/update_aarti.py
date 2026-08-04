@@ -8,7 +8,12 @@ JSON_PATH = "live_aarti.json"
 def get_live_video_id(search_query):
     try:
         url = f"https://www.youtube.com/results?search_query={search_query}&sp=EgJAAQ%253D%253D"
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        # Using a more robust User-Agent to avoid 403 Forbidden errors
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+        }
+        req = urllib.request.Request(url, headers=headers)
         html = urllib.request.urlopen(req).read().decode('utf-8')
         # Find the first video ID in the search results
         match = re.search(r'\"videoId\":\"([a-zA-Z0-9_-]{11})\"', html)
@@ -19,7 +24,8 @@ def get_live_video_id(search_query):
     return None
 
 QUERIES = {
-    "1": "vaishno+devi+live+darshan",
+    # Updated query to specifically target the MH ONE SHRADDHA channel live stream
+    "1": "vaishno+devi+live+darshan+mh+one+shraddha",
     "2": "mahakaleshwar+live+darshan",
     "3": "banke+bihari+live+darshan"
 }
