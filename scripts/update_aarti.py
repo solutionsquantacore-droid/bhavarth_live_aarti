@@ -9,8 +9,10 @@ def get_live_video_id_from_search(search_query):
     try:
         url = f"https://www.youtube.com/results?search_query={search_query}&sp=EgJAAQ%253D%253D"
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept-Language': 'en-US,en;q=0.9',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Connection': 'keep-alive',
         }
         req = urllib.request.Request(url, headers=headers)
         html = urllib.request.urlopen(req).read().decode('utf-8')
@@ -25,8 +27,10 @@ def get_live_video_id_from_channel(channel_handle):
     try:
         url = f"https://www.youtube.com/{channel_handle}/live"
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept-Language': 'en-US,en;q=0.9',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Connection': 'keep-alive',
         }
         req = urllib.request.Request(url, headers=headers)
         html = urllib.request.urlopen(req).read().decode('utf-8')
