@@ -42,17 +42,40 @@ def get_live_video_id_from_channel(channel_handle):
         print(f"Error fetching channel live for {channel_handle}: {e}")
     return None
 
+def get_video_title(vid):
+    try:
+        url = f"https://www.youtube.com/watch?v={vid}"
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+        req = urllib.request.Request(url, headers=headers)
+        html = urllib.request.urlopen(req).read().decode('utf-8')
+        match = re.search(r'<title>(.*?)</title>', html)
+        if match:
+            return match.group(1)
+    except Exception as e:
+        print(f"Error fetching title for {vid}: {e}")
+    return ""
+
 QUERIES = {
-    "1": [
-        {"type": "channel", "handle": "@MHONESHRADDHA"},
-        {"type": "search", "query": "vaishno+devi+live+darshan"}
-    ],
-    "2": [
-        {"type": "search", "query": "mahakaleshwar+live+darshan"}
-    ],
-    "3": [
-        {"type": "search", "query": "banke+bihari+live+darshan"}
-    ]
+    "1": {
+        "keywords": ["vaishno", "वैष्णो"],
+        "sources": [
+            {"type": "channel", "handle": "@MHONESHRADDHA"},
+            {"type": "search", "query": "vaishno+devi+live+darshan"},
+            {"type": "search", "query": "maa+vaishno+devi+live+aarti"}
+        ]
+    },
+    "2": {
+        "keywords": ["mahakal", "महाकाल"],
+        "sources": [
+            {"type": "search", "query": "mahakaleshwar+live+darshan"}
+        ]
+    },
+    "3": {
+        "keywords": ["banke", "bihari", "बांके", "बिहारी", "krishna", "vrindavan"],
+        "sources": [
+            {"type": "search", "query": "banke+bihari+live+darshan"}
+        ]
+    }
 }
 
 def main():
@@ -66,8 +89,10 @@ def main():
 
     updated = False
     for item in data:
-        sources = QUERIES.get(item['id'])
-        if sources:
+        query_data = QUERIES.get(item['id'])
+        if query_data:
+            sources = query_data["sources"]
+            keywords = query_data["keywords"]
             vids = []
             
             # Fetch all available video IDs for this item
@@ -78,8 +103,18 @@ def main():
                 elif source['type'] == 'search':
                     vid = get_live_video_id_from_search(source['query'])
                 
-                if vid:
-                    vids.append(vid)
+                if vid and vid not in vids:
+                    # Validate title
+                    title = get_video_title(vid).lower()
+                    is_valid = False
+                    for kw in keywords:
+                        if kw.lower() in title:
+                            is_valid = True
+                            break
+                    if is_valid:
+                        vids.append(vid)
+                    else:
+                        print(f"Skipping video {vid} for {item['temple_name_en']} due to mismatched title: {title}")
             
             if vids:
                 # Primary URL
@@ -104,7 +139,7 @@ def main():
                 else:
                     print(f"{item['temple_name_en']} is already up to date ({vids})")
             else:
-                print(f"Could not find live video for {item['temple_name_en']} from any source.")
+                print(f"Could not find valid live video for {item['temple_name_en']} from any source.")
 
     if updated:
         with open(JSON_PATH, 'w', encoding='utf-8') as f:
