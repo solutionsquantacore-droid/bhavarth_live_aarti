@@ -5,7 +5,7 @@ import os
 
 JSON_PATH = "live_aarti.json"
 
-def get_live_video_id_from_search(search_query):
+def get_live_video_ids_from_search(search_query):
     try:
         url = f"https://www.youtube.com/results?search_query={search_query}&sp=EgJAAQ%253D%253D"
         headers = {
@@ -13,12 +13,11 @@ def get_live_video_id_from_search(search_query):
         }
         req = urllib.request.Request(url, headers=headers)
         html = urllib.request.urlopen(req).read().decode('utf-8')
-        match = re.search(r'\"videoId\":\"([a-zA-Z0-9_-]{11})\"', html)
-        if match:
-            return match.group(1)
+        matches = re.findall(r'\"videoId\":\"([a-zA-Z0-9_-]{11})\"', html)
+        return list(dict.fromkeys(matches)) # Return unique IDs in order
     except Exception as e:
         print(f"Error fetching for {search_query}: {e}")
-    return None
+    return []
 
 def get_live_video_id_from_channel(channel_handle):
     try:
@@ -97,24 +96,30 @@ def main():
             
             # Fetch all available video IDs for this item
             for source in sources:
-                vid = None
                 if source['type'] == 'channel':
                     vid = get_live_video_id_from_channel(source['handle'])
+                    fetched_vids = [vid] if vid else []
                 elif source['type'] == 'search':
-                    vid = get_live_video_id_from_search(source['query'])
+                    fetched_vids = get_live_video_ids_from_search(source['query'])
                 
-                if vid and vid not in vids:
-                    # Validate title
-                    title = get_video_title(vid).lower()
-                    is_valid = False
-                    for kw in keywords:
-                        if kw.lower() in title:
-                            is_valid = True
-                            break
-                    if is_valid:
-                        vids.append(vid)
-                    else:
-                        print(f"Skipping video {vid} for {item['temple_name_en']} due to mismatched title: {title}")
+                for vid in fetched_vids:
+                    if vid and vid not in vids:
+                        # Validate title
+                        title = get_video_title(vid).lower()
+                        is_valid = False
+                        for kw in keywords:
+                            if kw.lower() in title:
+                                is_valid = True
+                                break
+                        if is_valid:
+                            vids.append(vid)
+                            # Stop once we have 2 valid streams to save time
+                            if len(vids) >= 2:
+                                break
+                        else:
+                            print(f"Skipping video {vid} for {item['temple_name_en']} due to mismatched title: {title}")
+                if len(vids) >= 2:
+                    break
             
             if vids:
                 # Primary URL
