@@ -146,9 +146,8 @@ def main():
                     item['live_url_2'] = new_url_2
                     item_updated = True
             elif query_data.get("secondary"):
-                if 'live_url_2' in item:
-                    item.pop('live_url_2', None)
-                    item_updated = True
+                # If we couldn't find a secondary stream (e.g. rate limit), keep the old one as a fallback.
+                pass
                     
             if not primary_vid and not secondary_vid:
                 print(f"Could not find valid live video for {item['temple_name_en']} from any source.")
