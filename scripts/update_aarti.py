@@ -50,14 +50,14 @@ def get_video_title(vid):
 QUERIES = {
     "1": {
         "primary": {
-            "keywords": ["vaishno", "वैष्णो", "mh one", "shraddha"],
+            "keywords": ["vaishno", "वैष्णो"],
             "sources": [
                 {"type": "channel", "handle": "@MHONESHRADDHA"},
                 {"type": "search", "query": "mh+one+shraddha+vaishno+devi+live+darshan"}
             ]
         },
         "secondary": {
-            "keywords": ["vaishno", "वैष्णो", "mata", "maa", "माता", "मां"],
+            "keywords": ["vaishno", "वैष्णो"],
             "sources": [
                 {"type": "channel", "handle": "@SonotekBhakti"},
                 {"type": "channel", "handle": "@Sonotek"},
