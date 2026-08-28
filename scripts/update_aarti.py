@@ -87,7 +87,6 @@ def main():
         if query_data:
             sources = query_data["sources"]
             keywords = query_data["keywords"]
-            vids = []
             
             vids = []
             checked_vids = set()
