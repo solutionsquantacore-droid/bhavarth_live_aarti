@@ -49,10 +49,11 @@ def get_video_title(vid):
 
 QUERIES = {
     "1": {
-        "keywords": ["vaishno", "वैष्णो"],
+        "keywords": ["vaishno", "वैष्णो", "mata", "maa", "माता", "मां"],
         "sources": [
             {"type": "channel", "handle": "@MHONESHRADDHA"},
             {"type": "channel", "handle": "@SonotekBhakti"},
+            {"type": "channel", "handle": "@Sonotek"},
             {"type": "search", "query": "vaishno+devi+live+darshan"},
             {"type": "search", "query": "maa+vaishno+devi+live+aarti"}
         ]
