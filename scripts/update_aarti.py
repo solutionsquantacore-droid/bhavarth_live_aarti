@@ -88,19 +88,25 @@ def main():
             keywords = query_data["keywords"]
             vids = []
             
-            # Fetch valid videos per source
-            all_valid_vids = [] # List of lists: [ [vid1, vid2], [vid3], ... ]
+            vids = []
+            checked_vids = set()
+            source_fetched_cache = []
             
+            # First pass: try to get exactly ONE valid video from each source, in order
             for source in sources:
+                if len(vids) >= 2:
+                    break
+                    
                 if source['type'] == 'channel':
                     fetched_vids = get_live_video_ids_from_channel(source['handle'])
                 elif source['type'] == 'search':
                     fetched_vids = get_live_video_ids_from_search(source['query'])
                 
-                source_vids = []
+                source_fetched_cache.append(fetched_vids)
+                
                 for vid in fetched_vids:
-                    # check globally unique
-                    if vid and not any(vid in sublist for sublist in all_valid_vids):
+                    if vid and vid not in checked_vids:
+                        checked_vids.add(vid)
                         title = get_video_title(vid).lower()
                         is_valid = False
                         for kw in keywords:
@@ -108,24 +114,31 @@ def main():
                                 is_valid = True
                                 break
                         if is_valid:
-                            source_vids.append(vid)
+                            vids.append(vid)
+                            break # Found 1 for this source, move to next source to ensure diversity!
                         else:
                             print(f"Skipping video {vid} for {item['temple_name_en']} due to mismatched title: {title}")
-                if source_vids:
-                    all_valid_vids.append(source_vids)
-            
-            # Pick one from each source to ensure diversity
-            vids = []
-            # First pass: take the first video from each available source
-            for source_vids in all_valid_vids:
-                if source_vids and len(vids) < 2:
-                    vids.append(source_vids.pop(0))
-            
-            # Second pass: if we still need more, take remaining videos from the sources
+                            
+            # Second pass: if we still need more videos, go back through the cached lists
             if len(vids) < 2:
-                for source_vids in all_valid_vids:
-                    while source_vids and len(vids) < 2:
-                        vids.append(source_vids.pop(0))
+                for fetched_vids in source_fetched_cache:
+                    if len(vids) >= 2:
+                        break
+                    for vid in fetched_vids:
+                        if len(vids) >= 2:
+                            break
+                        if vid and vid not in checked_vids:
+                            checked_vids.add(vid)
+                            title = get_video_title(vid).lower()
+                            is_valid = False
+                            for kw in keywords:
+                                if kw.lower() in title:
+                                    is_valid = True
+                                    break
+                            if is_valid:
+                                vids.append(vid)
+                            else:
+                                print(f"Skipping video {vid} for {item['temple_name_en']} due to mismatched title: {title}")
             
             if vids:
                 # Primary URL
