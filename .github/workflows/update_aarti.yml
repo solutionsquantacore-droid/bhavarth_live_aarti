@@ -2,12 +2,15 @@ name: Update Live Aarti JSON
 
 on:
   schedule:
-     # Morning Aarti at 6:25 AM IST (00:55 UTC)
-    - cron: '55 0 * * *'
+    # Morning Aarti Window: 6:00 AM - 7:30 AM IST (00:30 - 02:00 UTC)
+    - cron: '30,45 0 * * *'
+    - cron: '0,15,30,45 1 * * *'
     
-    # Evening Aarti at 7:25 PM IST (13:55 UTC)
-    - cron: '55 13 * * *'
-  workflow_dispatch: # Allows manual trigger from GitHub UI
+    # Evening Aarti Window: 7:00 PM - 8:30 PM IST (13:30 - 15:00 UTC)
+    - cron: '30,45 13 * * *'
+    - cron: '0,15,30,45 14 * * *'
+
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
 
 jobs:
   update-json:
