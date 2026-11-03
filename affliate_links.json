@@ -1,7 +1,7 @@
 [
   {
     "id": "amazon_curated_store",
-    "enabled": true,
+    "enabled": false,
     "titleHindi": "पूजा सामग्री एवं आध्यात्मिक संग्रह",
     "titleEnglish": "Puja Samagri & Spiritual Essentials",
     "affiliateUrl": "https://link.amazon/B04Jo5BOI"
