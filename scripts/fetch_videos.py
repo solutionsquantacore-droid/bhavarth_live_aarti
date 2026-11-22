@@ -34,8 +34,7 @@ CHANNELS = [
 ]
 
 OUTPUT_FILE = os.getenv("OUTPUT_FILE", "videos.json")
-MAX_VIDEOS_PER_CHANNEL = int(os.getenv("MAX_VIDEOS_PER_CHANNEL", "20"))
-MAX_VIDEOS_PER_CHANNEL = int(os.getenv("MAX_VIDEOS_PER_CHANNEL", "0")) # 0 = no limit, fetches all videos
+MAX_VIDEOS_PER_CHANNEL = int(os.getenv("MAX_VIDEOS_PER_CHANNEL", "0"))  # 0 = no limit, fetches all videos
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 
 # Primary & Fallback Translators
@@ -57,9 +56,7 @@ def has_latin(text: str) -> bool:
 
 def clean_title(title: str) -> str:
     """Removes hashtags, emojis, and extraneous trailing punctuation."""
-    # Remove hashtags
     cleaned = re.sub(r'#\S+', '', title)
-    # Remove multiple spaces
     cleaned = re.sub(r'\s+', ' ', cleaned).strip(' |-\t\n')
     return cleaned
 
@@ -110,12 +107,10 @@ def translate_text(text: str, target_lang: str) -> str:
     2. GoogleTranslator
     3. MyMemoryTranslator
     """
-    # 1. Gemini
     gemini_result = translate_with_gemini(text, target_lang)
     if gemini_result:
         return gemini_result
 
-    # 2. GoogleTranslator
     try:
         if target_lang == "English":
             return google_to_en.translate(text)
@@ -124,7 +119,6 @@ def translate_text(text: str, target_lang: str) -> str:
     except Exception:
         pass
 
-    # 3. MyMemoryTranslator fallback
     try:
         if target_lang == "English":
             return mymemory_to_en.translate(text)
@@ -133,7 +127,6 @@ def translate_text(text: str, target_lang: str) -> str:
     except Exception as e:
         print(f"    [MyMemoryTranslator fallback error] {e}")
 
-    # Fallback to original text if all failed
     return text
 
 
@@ -143,24 +136,20 @@ def get_translations(raw_title: str):
     """
     title = clean_title(raw_title)
 
-    # Check for existing bilingual segments
     hi_part, en_part = split_bilingual_title(title)
     if hi_part and en_part:
         return hi_part, en_part
 
-    # If primarily Hindi
     if has_devanagari(title):
         title_hindi = title
         title_english = translate_text(title, "English")
         return title_hindi, title_english
 
-    # If primarily English
     title_english = title
     title_hindi = translate_text(title, "Hindi")
     return title_hindi, title_english
 
 
-def fetch_channel_videos(channel_handle: str, max_videos: int = 20):
 def fetch_channel_videos(channel_handle: str, max_videos: int = 0):
     """
     Fetches videos from a channel's /videos tab using yt-dlp.
@@ -168,7 +157,6 @@ def fetch_channel_videos(channel_handle: str, max_videos: int = 0):
     """
     handle_clean = channel_handle.strip().lstrip('/')
     url = f"https://www.youtube.com/{handle_clean}/videos"
-    print(f"\nScanning channel: {url}...")
     limit_msg = f"latest {max_videos}" if max_videos > 0 else "all available"
     print(f"\nScanning channel ({limit_msg} videos): {url}...")
 
@@ -219,7 +207,6 @@ def main():
     existing_items = []
     known_urls = set()
 
-    # Load existing JSON if present
     if os.path.exists(OUTPUT_FILE):
         try:
             with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
@@ -255,7 +242,6 @@ def main():
             known_urls.add(url)
             print(f"    -> Hindi:   {title_hindi}")
             print(f"    -> English: {title_english}")
-            time.sleep(0.5)
 
             # Save progress every 10 videos so no work is lost on large runs
             if len(new_entries) % 10 == 0:
@@ -269,7 +255,6 @@ def main():
         return
 
     print(f"\nAdding {len(new_entries)} new entries.")
-    # Place newest first, followed by previous items
     updated_data = new_entries + existing_items
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
