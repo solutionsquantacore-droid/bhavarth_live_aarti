@@ -29,8 +29,9 @@ jobs:
 
       - name: Run Fetch Videos Script
         env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }} # Optional
           OUTPUT_FILE: 'videos.json'
-          MAX_VIDEOS_PER_CHANNEL: '50'
+          MAX_VIDEOS_PER_CHANNEL: '0' # '0' means NO LIMIT (fetches all videos)
         run: |
           if [ -f "scripts/fetch_videos.py" ]; then
             python scripts/fetch_videos.py
