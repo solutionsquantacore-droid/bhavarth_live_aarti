@@ -1,0 +1,46 @@
+name: Fetch and Update YouTube Videos
+
+on:
+  schedule:
+    # Runs daily at 06:00 UTC (11:30 AM IST)
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Allows manual run button in Actions tab
+
+permissions:
+  contents: write # Required for committing and pushing back to the repo
+
+jobs:
+  update-videos:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Fetch Videos Script
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }} # Optional: for AI spiritual translation
+          OUTPUT_FILE: 'videos.json'
+          MAX_VIDEOS_PER_CHANNEL: '50'
+        run: |
+          python scripts/fetch_videos.py
+
+      - name: Commit and Push Changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Automated: Update YouTube videos JSON [skip ci]"
+          file_pattern: "videos.json"
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "github-actions[bot]@users.noreply.github.com"
+
