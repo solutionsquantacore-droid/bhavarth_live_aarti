@@ -35,6 +35,7 @@ CHANNELS = [
 
 OUTPUT_FILE = os.getenv("OUTPUT_FILE", "videos.json")
 MAX_VIDEOS_PER_CHANNEL = int(os.getenv("MAX_VIDEOS_PER_CHANNEL", "20"))
+MAX_VIDEOS_PER_CHANNEL = int(os.getenv("MAX_VIDEOS_PER_CHANNEL", "0")) # 0 = no limit, fetches all videos
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 
 # Primary & Fallback Translators
@@ -160,12 +161,16 @@ def get_translations(raw_title: str):
 
 
 def fetch_channel_videos(channel_handle: str, max_videos: int = 20):
+def fetch_channel_videos(channel_handle: str, max_videos: int = 0):
     """
     Fetches videos from a channel's /videos tab using yt-dlp.
+    Passing max_videos=0 fetches all available videos without limit.
     """
     handle_clean = channel_handle.strip().lstrip('/')
     url = f"https://www.youtube.com/{handle_clean}/videos"
     print(f"\nScanning channel: {url}...")
+    limit_msg = f"latest {max_videos}" if max_videos > 0 else "all available"
+    print(f"\nScanning channel ({limit_msg} videos): {url}...")
 
     ydl_opts = {
         'extract_flat': True,
@@ -251,6 +256,13 @@ def main():
             print(f"    -> Hindi:   {title_hindi}")
             print(f"    -> English: {title_english}")
             time.sleep(0.5)
+
+            # Save progress every 10 videos so no work is lost on large runs
+            if len(new_entries) % 10 == 0:
+                with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+                    json.dump(new_entries + existing_items, f, ensure_ascii=False, indent=2)
+
+            time.sleep(0.3)
 
     if not new_entries:
         print("\nAll videos are up to date. No changes needed.")
