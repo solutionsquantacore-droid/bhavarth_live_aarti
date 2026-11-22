@@ -30,7 +30,7 @@ except Exception:
 # Target channels
 CHANNELS = [
     "@GokulBhawanAyodhya",
-    "@shree_radhe603"
+    "@shree_radhe603"]
 # Target channels with per-channel limits (Total: 400 videos)
 CHANNEL_CONFIG = [
     {
