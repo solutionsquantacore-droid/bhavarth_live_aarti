@@ -1,7 +1,7 @@
 [
   {
     "id": "amazon_curated_store",
-    "enabled": false,
+    "enabled": true,
     "affiliateUrl": "https://www.amazon.in/s?k=kids+cool+toys&ascsubtag=srctok-04ae5d19ca5b74a9&btn_ref=srctok-04ae5d19ca5b74a9&btn_type=ss&crid=782HDFZEYWY7&sprefix=kids+cool+gadgets%2Caps%2C363&linkCode=ll2&tag=quantacoresol-21&linkId=efb26731284d55f1874d8d8891d8585c&ref_=as_li_ss_tl"
   }
 ]
