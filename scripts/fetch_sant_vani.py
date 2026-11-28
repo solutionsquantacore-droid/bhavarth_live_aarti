@@ -37,14 +37,15 @@ MAX_VIDEOS = 100
 PER_QUERY_RESULTS = 15
 
 SEARCH_QUERIES = [
-    "naam ki mahima",
-    "naam jap ki mahima",
     "ram naam ki mahima",
     "radha naam ki mahima",
-    "naam mahima sant vani",
-    "kalyug me naam ki mahima",
+    "krishna naam jap mahima",
     "hari naam sankirtan mahima",
-    "premanand ji maharaj naam jap mahima",
+    "naam jap mahima premanand ji maharaj",
+    "naam mahima rajendra das ji maharaj",
+    "naam mahima sanatan sant vani",
+    "shiv naam ki mahima",
+    "naam jap ki mahima swami ramsukhdas",
 ]
 
 # Keywords to recognize well-known speakers from title/channel
@@ -53,6 +54,8 @@ SPEAKER_KEYWORDS = {
     "प्रेमानंद": "पूज्य प्रेमानंद जी महाराज",
     "bhajan marg": "पूज्य प्रेमानंद जी महाराज",
     "sadhan path": "पूज्य प्रेमानंद जी महाराज",
+    "rajendra das": "पूज्य राजेंद्र दास जी महाराज",
+    "राजेंद्र दास": "पूज्य राजेंद्र दास जी महाराज",
     "morari bapu": "पूज्य मोरारी बापू",
     "मोरारी बापू": "पूज्य मोरारी बापू",
     "pradeep mishra": "पंडित प्रदीप मिश्रा जी",
@@ -82,6 +85,41 @@ BLOCKED_KEYWORDS = [
     "ringtone",
     "dj remix",
     "lofi",
+    # Non-Hindu religious terms to keep Sant Vani strictly Hindu / Sanatan Dharma
+    "jesus",
+    "christ",
+    "christian",
+    "bible",
+    "gospel",
+    "church",
+    "pastor",
+    "yeshu",
+    "masih",
+    "यीशु",
+    "ईसा",
+    "मसीह",
+    "बाइबल",
+    "चर्च",
+    "jain",
+    "jainism",
+    "tirthankar",
+    "navkar",
+    "namokar",
+    "जैन",
+    "तीर्थंकर",
+    "नवकार",
+    "णमोकार",
+    "पर्युषण",
+    "gurbani",
+    "waheguru",
+    "sikh",
+    "गुरबाणी",
+    "वाहेगुरु",
+    "allah",
+    "quran",
+    "islamic",
+    "अल्लाह",
+    "कुरान",
 ]
 
 
@@ -176,9 +214,9 @@ def detect_speaker(title: str, channel_name: Optional[str]) -> str:
     return "संत वाणी"
 
 
-def is_valid_video(title: str) -> bool:
-    lowered = title.lower()
-    return not any(bad in lowered for bad in BLOCKED_KEYWORDS)
+def is_valid_video(title: str, channel_name: Optional[str] = None) -> bool:
+    combined = f"{title} {channel_name or ''}".lower()
+    return not any(bad in combined for bad in BLOCKED_KEYWORDS)
 
 
 def build_entry(video_id: str, raw_title: str, channel_name: Optional[str]) -> Dict[str, str]:
@@ -256,7 +294,7 @@ def fetch_via_youtube_api(api_key: str) -> List[Dict[str, str]]:
             raw_title = snippet.get("title", "")
             channel = snippet.get("channelTitle", "")
 
-            if not video_id or video_id in seen_ids or not is_valid_video(raw_title):
+            if not video_id or video_id in seen_ids or not is_valid_video(raw_title, channel):
                 continue
 
             seen_ids.add(video_id)
@@ -299,7 +337,7 @@ def fetch_via_yt_dlp() -> List[Dict[str, str]]:
                 # Skip Shorts (< 90 seconds) when duration is available
                 if duration is not None and duration < 90:
                     continue
-                if not video_id or video_id in seen_ids or not is_valid_video(raw_title):
+                if not video_id or video_id in seen_ids or not is_valid_video(raw_title, channel):
                     continue
 
                 seen_ids.add(video_id)
@@ -335,6 +373,11 @@ def main() -> None:
     for item in fetched + existing:
         url = item.get("youtube_url", "").strip()
         if not url or url in seen_urls:
+            continue
+        if not is_valid_video(
+            f"{item.get('title_hindi', '')} {item.get('title_english', '')}",
+            item.get("speaker"),
+        ):
             continue
         seen_urls.add(url)
         merged.append(item)
