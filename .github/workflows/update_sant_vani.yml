@@ -1,0 +1,46 @@
+name: Update Sant Vani Naam Mahima Videos
+
+on:
+  schedule:
+    # Runs daily at 02:00 UTC (07:30 AM IST)
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  update-sant-vani:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Fetch Naam Ki Mahima Sant Vani videos
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: |
+          python scripts/fetch_sant_vani.py
+
+      - name: Commit and push updated JSON
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add naam_mahima_sant_vani.json
+          if git diff --staged --quiet; then
+            echo "No changes to naam_mahima_sant_vani.json"
+          else
+            git commit -m "chore: update naam_mahima_sant_vani.json [skip ci]"
+            git push
+          fi
